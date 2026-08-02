@@ -4,81 +4,148 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2026-8-1: A small recap of July</title>
-    
 </head>
 <body>
-    Not even exaggerating, July was a lot of work.
-    Here is a small recap of what I did in July, and what I plan to do in August.
-    It's very long, so I’ll try to keep it as short (and ironic) as possible so you don't go doomscroll instead.
-    
+    <p align="right">
+        <a href="https://lopalma.github.io/">lopalma.github.io</a>
+    </p>
+
+
+    <p>
+        Not even exaggerating, July was a lot of work.
+        Here is a small recap of what I did in July, and what I plan to do in August.
+        It's very long, so I’ll try to keep it as short (and ironic) as possible so you don't go doomscroll instead.
+    </p>
+
     <h1>PMS-S8</h1>
 
-    I started designing a simple 8-bit CPU. Well below the limit of my capabilities. I wanted to make sure I could finish it.
-    VERY sure, in fact.
-    The first iteration was PMS-S8. It was a simple 8-bit RISC core. The main idea was to use as few gates as possible,
-    as I wanted this manufactured in ASIC. Since I am poor and cannot afford to manufacture a CPU, I wanted to make sure it was
-    extremely small, to fit in the smallest tile TinyTapeout has to offer.
-    The main features of it are an extremely strict accumulator-based architecture with just two registers: A and T.
-    A is the accumulator, and T is a temporary register. Of course this is too little to do anything meaningful, plus,
-    PC was 16 bits. That meant that, this being a Von Neumann machine, I had to store 16-bit addresses somehow. Enter,
-    RAMgisters. As the name implies, it's just a bunch of registers implemented as SRAM.
-    They are eight (R0...R7), and since the ALU is 8-bit, I needed a way to access high and low bytes without exploding
-    ASIC complexity with multiplexers and decoders. So instead, I used a special 'I' register (regret #1) to address said
-    RAMgisters.
-    <br>
-    Long story short: that was very, very... interesting. Managing both 16-bit words in an 8-bit datapath AND juggling the values of the 'I'
-    register such that after each operation I pointed it in the right place was a LOT of mental load.
-    To make this worse, the CPU had no hardware stack.
-    I tried writing a BASIC interpreter for it, some VGA output, and a few other things.
-    I was able to do everything except finish the BASIC interpreter. Juggling all of that while not having a stack was a nightmare. I had to use the RAMgisters as a stack, and that was a pain.
-    However, I couldn't just ditch the CPU, as I had already spent a lot of time on it. So I decided to make a superset of it, PMS-S81.
+    <p>
+        I started designing a simple 8-bit CPU. Well below the limit of my capabilities. I wanted to make sure I could finish it.
+        VERY sure, in fact.
+        The first iteration was PMS-S8. It was a simple 8-bit RISC core. The main idea was to use as few gates as possible,
+        as I wanted this manufactured in ASIC. Since I am poor and cannot afford to manufacture a CPU, I wanted to make sure it was
+        extremely small, to fit in the smallest tile TinyTapeout has to offer.
+    </p>
+
+    <p>
+        The main features of it are an extremely strict accumulator-based architecture with just two registers: A and T.
+        A is the accumulator, and T is a temporary register. Of course this is too little to do anything meaningful, plus,
+        PC was 16 bits. That meant that, this being a Von Neumann machine, I had to store 16-bit addresses somehow. Enter,
+        RAMgisters. As the name implies, it's just a bunch of registers implemented as SRAM.
+    </p>
+
+    <p>
+        They are eight (R0...R7), and since the ALU is 8-bit, I needed a way to access high and low bytes without exploding
+        ASIC complexity with multiplexers and decoders. So instead, I used a special 'I' register (regret #1) to address said
+        RAMgisters.
+    </p>
+
+    <p>
+        Long story short: that was very, very... interesting. Managing both 16-bit words in an 8-bit datapath AND juggling the values of the 'I'
+        register such that after each operation I pointed it in the right place was a LOT of mental load.
+        To make this worse, the CPU had no hardware stack.
+    </p>
+
+    <p>
+        I tried writing a BASIC interpreter for it, some VGA output, and a few other things.
+        I was able to do everything except finish the BASIC interpreter. Juggling all of that while not having a stack was a nightmare.
+        I had to use the RAMgisters as a stack, and that was a pain.
+    </p>
+
+    <p>
+        However, I couldn't just ditch the CPU, as I had already spent a lot of time on it.
+        So I decided to make a superset of it, PMS-S81.
+    </p>
 
     <h1>PMS-S81</h1>
-    Now, the idea to actually get this on ASIC was 100% discarded. I was now pursuing my Quest™.
-    For this reason, I created an entire computer around PMS-S81, which was much more enjoyable than the barebones
-    one I had made around PMS-S8. I added a hardware stack, native 16-bit instructions, call and return, and now A and T could chain (A:T) to make W.
-    A 16-bit accumulator. Needless to say that was a goated manoeuvre.
-    S81 is still a very small superset of S8 but the difference is night and day.
-    I was so happy: I could finally write an operating system for my custom computer and-
-    <br>
-    Of course, it did NOT work.
-    Turns out, even the most impenetrable test suite can't overcome the quirk of actual silicon.
-    Now, I surely know the testbench makes the wrong assumptions. I mean, I wrote it.
-    The great disadvantage of being self-taught is that the teacher has no clue what the fuck they're doing.
-    And now, I'm currently debugging the CPU AND software at the same time. It's an endless loop of pain that works as follows.
-    First, run synthesis in Vivado. Then, check behavioral simulation in Vivado. Then, inspect the raw hexadecimal of the compiled BIOS.
-    Trace execution manually across every CPU cycle.
-    Monitor tens of cycles at the same time, spot inconsistencies, edit hardware, resynthesize.
-    This had gotten so boring this time I actually employed DeepSeek to munch on VCDs all day.
-    That was very helpful. Although, it did hallucinate a bit, but, hey, it costs like a buck per million tokens.
-    As soon as I get a working something, I will update the blogposts with pictures and explanations.
+
+    <p>
+        Now, the idea to actually get this on ASIC was 100% discarded. I was now pursuing my Quest™.
+        For this reason, I created an entire computer around PMS-S81, which was much more enjoyable than the barebones
+        one I had made around PMS-S8. I added a hardware stack, native 16-bit instructions, call and return, and now A and T could chain (A:T) to make W.
+        A 16-bit accumulator. Needless to say that was a goated manoeuvre.
+    </p>
+
+    <p>
+        S81 is still a very small superset of S8 but the difference is night and day.
+        I was so happy: I could finally write an operating system for my custom computer and-
+    </p>
+
+    <p>
+        Of course, it did NOT work.
+        Turns out, even the most impenetrable test suite can't overcome the quirk of actual silicon.
+        Now, I surely know the testbench makes the wrong assumptions. I mean, I wrote it.
+    </p>
+
+    <p>
+        The great disadvantage of being self-taught is that the teacher has no clue what the fuck they're doing.
+        And now, I'm currently debugging the CPU AND software at the same time. It's an endless loop of pain that works as follows.
+    </p>
+
+    <p>
+        First, run synthesis in Vivado. Then, check behavioral simulation in Vivado. Then, inspect the raw hexadecimal of the compiled BIOS.
+        Trace execution manually across every CPU cycle.
+        Monitor tens of cycles at the same time, spot inconsistencies, edit hardware, resynthesize.
+    </p>
+
+    <p>
+        This had gotten so boring this time I actually employed DeepSeek to munch on VCDs all day.
+        That was very helpful. Although, it did hallucinate a bit, but, hey, it costs like a buck per million tokens.
+    </p>
+
+    <p>
+        As soon as I get a working something, I will update the blogposts with pictures and explanations.
+    </p>
+
     <hr>
 
-    If you are interested in finding out how the computer I made works, here is a small preview until I make a proper wiki.
-    PMS-S81 reads on port 0x61 from a PS/2 scancodes-to-ASCII converter. 0x60 and 0x64 are still reserved for raw scancode and canonical
-    PS/2 behavior. VGA is memory mapped from addresses 0xF000 to 0xFF9F (80x25 textbuffer).
-    <br>
-    I did NOT create the VGA CRTC. I <a href="https://github.com/tomstorey/vga_crtc">found it on GitHub</a>.
+    <p>
+        If you are interested in finding out how the computer I made works, here is a small preview until I make a proper wiki.
+        PMS-S81 reads on port 0x61 from a PS/2 scancodes-to-ASCII converter. 0x60 and 0x64 are still reserved for raw scancode and canonical
+        PS/2 behavior. VGA is memory mapped from addresses 0xF000 to 0xFF9F (80x25 textbuffer).
+    </p>
+
+    <p>
+        I did NOT create the VGA CRTC. I <a href="https://github.com/tomstorey/vga_crtc">found it on GitHub</a>.
+    </p>
 
     <h1>But... what about software?</h1>
-    I have been working on an operating system for PMS-S81. As my <i>modus operandi</i> dictates, it's everything I could come up with on my own.
-    I of course did little to no research (god forbid I learn from others) and created the lowest layer of my OS: RRT-1.
-    The lowest layer is a device interface layer (DIL) although instead of using the fancy name I made, I myself just call it a BIOS.
-    <br>
-    Because that's basically what it is: it provides a handy interface to otherwise boilerplate-rich and hardware-dependent code.
-    The 'syscalls' of the OS are just whatever functions I can fit in the DIL. To call them, the user manually has to call the actual hex addresses of
-    the implementations. You could call this a lazy solution, but I like to call that peak engineering.
+
+    <p>
+        I have been working on an operating system for PMS-S81. As my <i>modus operandi</i> dictates, it's everything I could come up with on my own.
+        I of course did little to no research (god forbid I learn from others) and created the lowest layer of my OS: RRT-1.
+    </p>
+
+    <p>
+        The lowest layer is a device interface layer (DIL) although instead of using the fancy name I made, I myself just call it a BIOS.
+    </p>
+
+    <p>
+        Because that's basically what it is: it provides a handy interface to otherwise boilerplate-rich and hardware-dependent code.
+        The 'syscalls' of the OS are just whatever functions I can fit in the DIL. To call them, the user manually has to call the actual hex addresses of
+        the implementations. You could call this a lazy solution, but I like to call that peak engineering.
+    </p>
+
     <hr>
+
     <h2>RRT-1</h2>
-    RRT-1 is a very simple OS. Its name stands for "Resident Real Time", because it lives in RAM at boot and is an RTOS.
-    The "resident" part is not much of a choice, but rather a necessity. I don't have actual storage for my FPGA board yet.
-    So the OS has to be flashed in RAM at boot time. Eventually I will add a storage device once I buy the PMOD expansion for it,
-    but to be fair I'm having enough of a struggle WITHOUT storage.
+
+    <p>
+        RRT-1 is a very simple OS. Its name stands for "Resident Real Time", because it lives in RAM at boot and is an RTOS.
+        The "resident" part is not much of a choice, but rather a necessity. I don't have actual storage for my FPGA board yet.
+    </p>
+
+    <p>
+        So the OS has to be flashed in RAM at boot time. Eventually I will add a storage device once I buy the PMOD expansion for it,
+        but to be fair I'm having enough of a struggle WITHOUT storage.
+    </p>
 
     <h1>What's next</h1>
+
     <ul>
         <li>Rewrite the entire SystemVerilog for the CPU in Chisel, a Scala framework that will hopefully make the process less painful for future work</li>
         <li>Make sure that the BIOS can start, detect that there's no OS, and send a message via UART</li>
     </ul>
+
 </body>
 </html>
