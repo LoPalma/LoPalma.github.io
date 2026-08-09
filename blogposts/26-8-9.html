@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update on the 9th of August, 2026</title>
+</head>
+<body>
+    <p align="left">
+        <a href="../index.html">lopalma.github.io</a>
+    </p>
+
+    <h1>Update on the 9th of August, 2026</h1>
+
+    <h2>The Atrocious 8-bit Struggle</h2>
+    <p>
+        Not much happened in the last eight days, but I felt obliged to report anyway.
+        <br>
+        A great deal went wrong, naturally.
+        I tried simplifying BIOS development by sending bytes over serial, which seemed like a splendid idea at the time.
+        Problem was, the CPU refused to send anything.
+        Tests suggested the <code>out</code> instruction was fine; of course I wrote the test myself.
+        There's roughly a 50/50 chance the tests were politely lying (depends on how many assumptions I baked in), but the <code>out</code> test looked solid.
+        So I added a small Verilog block dedicated to sending <code>$41</code> to the UART.
+        It... did not work.
+        Instead I saw <code>$FF</code> bytes, which was odd, so I swapped the value to be emitted to <code>$55</code> because of its peculiar binary pattern of alternating ones and zeros.
+        That produced no output at all.
+        This kicked off a long, soul-draining debugging session.
+        I devoured the board manual. NOTHING worked.
+        Biased by my own reasoning, I asked an AI for help, and the AI was more confused than I was.
+        It went nowhere, but at least the CPU and PS/2 were behaving themselves.
+    </p>
+
+    <h2>Going 32-bit</h2>
+    <p>
+        The ridiculous toil of coding an 8-bit CPU — mainly thanks to that infernal <code>I</code> register — convinced me never again to load two halves of a number just to add them.
+        Introducing PMS-32.
+        PMS-32 is a 32-bit processor, catalogued under the PArch32-v1 architecture name.
+        It's basically everything I disliked about 8-bit development, but inverted, and I tried to make it as RISC as possible.
+        I've never designed a purely RISC CPU with fixed instruction length before, so this was entertaining in a grudging sort of way.
+        I gave it more privilege domains instead of just the usual "kernel" and "user" from the 4332 CPU.
+        There are four: PD0, PD1, PD2 and PD3, ordered from most to least privileged.
+        Why all this separation? There isn't hardware memory protection, so the traditional benefit of privilege levels is limited.
+        The point is that the CPU now requires certain specific data structures to live in memory, and user programs absolutely must not touch them.
+        Which is why:
+        <ul>
+            <li>PD0 allocates the Trap Table and handles boot.</li>
+            <li>PD1 is the only level, aside from PD0, that can arbitrarily switch levels; it still can't manage the critical structures PD0 owns, so it can't boot the system.</li>
+            <li>PD2 can still manage interrupts but can no longer change its own permissions — it must trigger a privilege-level software trap (the <code>PDT</code> instruction) to alter them.</li>
+            <li>PD3 loses access to interrupt management and must escalate for almost everything.</li>
+        </ul>
+    </p>
+
+    <p>
+        This architecture is practically begging for a microkernel: kernel in PD0, drivers in PD1, services in PD2, and user programs in PD3.
+        This will not discard the plans for RRT-1; rather, RRT-1 will become a microkernel OS.
+        I even sketched the main architecture for the OS itself.
+    </p>
+
+    <h2>A concrete spec for RRT-1</h2>
+
+    <p>
+        Since the hardware is daft enough to let you overwrite the kernel, I'm going to make the kernel clever enough to prevent that.
+
+        <br>
+
+        The microkernel of RRT-1 will expose a very small set of syscalls, each derived from three primitives, the bare minimum to implement a microkernel:
+        <ul>
+            <li><code>send()</code>, to send messages to a service or thread.</li>
+            <li><code>recv()</code>, to receive messages from a service or thread.</li>
+            <li><code>yield()</code>, to give up control of the CPU.</li>
+        </ul>
+        From those primitives you can build <code>reply()</code> (a send+recv) or <code>call()</code> (recv+send).
+        This infrastructure will live in PD0. Drivers will be services you send to and receive from, but they'll reside in PD1.
+        My IPC model relies on a shared <code>Message</code> object in memory, with the sender writing and the receiver reading.
+        A problem arose: when a user calls <code>recv()</code>, the naive approach is to intercept whatever is sent and treat it as the answer.
+        That's ambiguous and dangerous: a service might need to send elsewhere and then reply to our original request. Enter the <code>Reply</code> object — strictly a reply — which clears this up.
+        I lose a little orthogonality, sure, but I gain security.
+        Other kernel objects include:
+        <ul>
+            <li><code>TCB</code>: Thread Control Block.</li>
+            <li><code>Memory</code>: a pool of RAM.</li>
+            <li><code>Permit</code>: an object tracking permissions.</li>
+        </ul>
+    </p>
+
+    <p>
+        The only real worry is the cost: tracking, checking and allocating on a core running at 100MHz might be more significant than I expect.
+        But that's a problem for future-me. I'm still a long way from booting an OS, and the microkernel approach pushes the day I drop to a shell even further away, since basic I/O drivers sit on top of the kernel.
+    </p>
+
+    <p>
+        For now, that's all. I'll keep the site updated where possible.
+        I'm traveling for the next week or two, so progress will be intermittent.
+    </p>
+
+    <h1>What's next</h1>
+    <ul>
+        <li>I have a rather mad idea for PMS-32, no spoilers; I'll reveal it next post (hint: it involves registers).</li>
+        <li>Hopefully I won't have to redesign the CPU from scratch if the UART refuses to cooperate.</li>
+        <li>Fingers crossed for some half-working franken-kernel output over serial.</li>
+    </ul>
+
+    
+</body>
+</html>
