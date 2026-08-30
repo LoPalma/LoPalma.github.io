@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Back at it after the holidays</title>
+</head>
+<body>
+    <p align="right">
+        <a href="../index.html">lopalma.github.io</a>
+    </p>
+
+    <h1>Holiday summary</h1>
+
+    <p>
+        I did some... "evolutive engineering", if so we want to call it (jumping from idea to idea very fast), true.
+        <br>
+        PMS-32 was the latest "cool" idea I had, which I of course could not refrain from engineering in way too much 
+        detail for what it got. The two-week pause during the holidays was beneficial. Whenever I got a new idea to pursue
+        I simply couldn't pursue it, giving me more time to ponder.
+        Here is what went on in the last three weeks.
+    </p>
+
+    <h2>The side-quest: making a tiny softcore</h2>
+    <p>
+        As the heading implies, I've been trying to cook a tiny CPU.
+        That's how miniSPU was born. I fully and thoroughly implemented it, formally verified it... everything.
+        It's a single ~300 lines long SystemVerilog file, the work of just a couple of afternoons. It took up 238LUTs exactly.
+        I was very satisfied, but then I compared it with the existing competition:
+        <ul>
+            <li><b>SERV</b>: absolute monster: in just 100-ish LUTs you get full RV32I support, at the cost of having tremendous IPC.</li>
+            <li><b>PicoBlaze</b>: created by actually manually instantiating individual LUTs for xilinx 7-series FPGAs. Smaller than SERV,
+            but it's 8bit only and requires you to write very cursed proprietary assembly.</li>    
+        </ul>
+        My core was, predictably, both larger and not perceptibly faster - a truly inspired combination. It only had four registers, meaning the generated code from an eventually ported C compiler
+        would have been very inefficient; also, although the core itself was a dual issue VLIW parallel core, the most useful instructions
+        (load/store with auto increment/decrement) simply couldn't be paired together. It was also extremely constrained in terms of the instructions
+        themselves: I had managed to fit two parallel instructions in a single 8bit bundle. The CPU could only add, subtract, load, store and jump if less or equal.
+        In general, the performance advantage of a 16bit parallel core was totally rendered useless by the poor quality of C code and the lack of competitivity in size, as it was double SERV.
+    </p>
+
+    <h2>TEC30: my first massive win</h2>
+    <p>
+        Before committing to actually porting ANY compiler to miniSPU, I wanted to test a new idea and check how
+        much cheaper it could have been in terms of LUTs.
+        <br>
+        Introducing, TEC30 (Tiny Embeddable Controller, originally Tiny Educational Computer).
+        TEC30 was created by me as an example of a CPU with a very simple datapath to hopefully help a friend of mine understand CPUs better.
+        It turned out to be very small in LUT size.
+        TEC30 is a zero register, memory-memory machine. It means that every instruction takes some data at some addresses and puts it back
+        somewhere in memory, without storing it in registers. The ALU and datapath are 8bit wide (hence the 3 in 30: 2^3=8, whereas the 0 means Zero-registers)
+        but since you can just perform ADC instructions on contiguous bytes in memory, you can perform abritrary size maths, as long as it's just integer calculations.
+        Memory is addressed in 16bits, but to avoid every instruction needing to store 6bytes of operand addresses (dest, src1 and src2) I decided
+        to make arithmetic implicitly target the 0-page, aka the first 256bytes in memory. This way I could halve the size of operands.
+        Every instruction is 4bytes long, composed of an opcode byte, a dest byte, and then two "wildcard" bytes. They can be:
+        <ul>
+            <li>Immediate values</li>
+            <li>0-page addresses</li>
+            <li>A single 16bit absolute address (for jumps)</li>
+        </ul>
+    </p>
+
+    <p>
+        TEC30 is now EXTREMELY C-friendly: ample scratchpad memory (0-page), arbitrary size arithmetic (I can manage all C types).
+        And on top of all that, the TEC30 core fits in exactly 98LUTs.
+        <br>
+        Exactly: that's PicoBlaze territory in terms of size, except you don't need to sell your sanity to write code for it, though you loose
+        some performance because BRAM reads are synchronous on FPGA fabric. But in turn, if I implement C for this, you get to actually write in C.
+        Totally insane to think about, for me.
+    </p>
+
+    <p>
+        If I ever get to port LLVM, writing an operating system would become so much simpler! I'd need assembly only for some critical parts.
+        Before I spend any amount of effort trying to port C, which seems kind of a big task, I'll proceed testing TEC30, will formally verify it,
+        and try to be as sure as mathematically possible that TEC30 works.
+    </p>
+
+    <h2>Where can I try TEC30?</h2>
+    <p>
+        Unfortunately you still can't, for the following reasons:
+        <ul>
+            <li>
+                TEC30 was created by optimizing hot paths with manually instantiated LUT6s. If your board doesn't mount
+                a Spartan-7 or Artix-7 FPGA it won't synthesize.
+            </li>
+            <li>TEC30 is still very much under testing. But, I'd really appreciate (once I release this) some contributors that could hopefully test TEC on their own boards. I'm especially interested in the iCE430 and Altera models.</li>
+        </ul>
+    </p>
+
+    <h1>What's next</h1>
+
+    <ul>
+        <li>Get to a point where TEC30 is actually publishable</li>
+        <li>Try to make the first few softwares targeting TEC30, and then bite off way more than I can chew porting LLVM because why not.</li>
+    </ul>
+</body>
+</html>
