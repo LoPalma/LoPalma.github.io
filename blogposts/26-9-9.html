@@ -46,37 +46,33 @@
     <p>
         I compiled the following simple C program:
         <br>
-        <code>
-            int add(int a, int b) {
-                return a + b;
-            }
-        </code>
+        <pre><code class="language-c">int add(int a, int b) {
+    return a + b;
+}</code></pre>
         <br>
 
         The generated assembly code is:
         <br>
-        <code>
-            	.module file
-            _add_PARM_1:
-                .ds 2
-            _add_PARM_2:
-                .ds 2
-            _L2:
-            add:
-                mov	11, _add_PARM_2+1
-                mov	10, _add_PARM_1+1
-                tst	0, 0, #0
-                add	f1, 10, 11
-                mov	11, _add_PARM_2
-                mov	10, _add_PARM_1
-                add	f0, 10, 11
-                tst	0, 0, #0
-                add	ret_hi, f0, zero
-                tst	0, 0, #0
-                add	ret_lo, f1, zero
-                ret
-            _L1:
-        </code>
+        <pre><code class="language-asm">.module file
+_add_PARM_1:
+    .ds 2
+_add_PARM_2:
+    .ds 2
+_L2:
+add:
+    mov 11, _add_PARM_2+1
+    mov 10, _add_PARM_1+1
+    tst 0, 0, #0
+    add f1, 10, 11
+    mov 11, _add_PARM_2
+    mov 10, _add_PARM_1
+    add f0, 10, 11
+    tst 0, 0, #0
+    add ret_hi, f0, zero
+    tst 0, 0, #0
+    add ret_lo, f1, zero
+    ret
+_L1:</code></pre>
         <br>
         Let's go over why the generated code could definitely be better. "Could be better" is doing some heroic understatement here.
     </p>
@@ -89,7 +85,9 @@
     </p>
 
     <p>
-        Now that the arguments are in the 0-page, the compiler clears carry with a <code>tst 0, 0, #0</code> instruction. This is because the Tec30 has no carry flag, and the <code>add</code> instruction will set the carry bit in the destination register if an overflow occurs. The compiler then performs the addition of the two arguments, storing the result in "f1" and "f0", which are also addresses in the 0-page.
+        Now that the arguments are in the 0-page, the compiler clears carry with a <code>tst 0, 0, #0</code> instruction. 
+        This is because the Tec30's only add opcode sums the carry flag, performing an add with carry. 
+        The compiler then performs the addition of the two arguments, storing the result in "f1" and "f0", which are also addresses in the 0-page.
         This is inefficiency number 1: the compiler could have easily stored the results in the <code>ret_hi</code> and <code>ret_lo</code> registers.
         The compiler then clears carry one more time, adds the remaining bytes, and moves the result to the return registers.
         <br>
@@ -106,16 +104,14 @@
     </p>
 
     <p>This is how the code should have rather been:
-        <code>
-            mov 11, _add_PARM_2+1
-            mov 10, _add_PARM_1+1
-            tst 0, 0, #0
-            add ret_lo, 10, 11     ; carry chain continues below
-            mov 11, _add_PARM_2
-            mov 10, _add_PARM_1
-            add ret_hi, 10, 11
-            ret
-        </code>
+        <pre><code class="language-asm">mov 11, _add_PARM_2+1
+    mov 10, _add_PARM_1+1
+    tst 0, 0, #0
+    add ret_lo, 10, 11     ; carry chain continues below
+    mov 11, _add_PARM_2
+    mov 10, _add_PARM_1
+    add ret_hi, 10, 11
+    ret</code></pre>
 
         <br>
         As you can see, it's a fraction of the original one and runs much faster.
