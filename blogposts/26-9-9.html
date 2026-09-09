@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compiler backend progress</title>
+</head>
+<body>
+    <h1>Porting a backend</h1>
+    <p>
+        Last time I mentioned Tec30, a ridiculously tiny softcore CPU I designed.
+        I stabilized the ISA and now TEC30X7 takes 160 LUTs bare.
+        Now that was done, I wanted to port a compiler, namely LLVM, to it. In the end I decided NOT to
+        mess with the giants, because LLVM is optimized for totally different kinds of CPU architectures. In the end, I chose
+        SDCC for the porting work. Here is a summary of what happened, how, and hopefully it can act as a guide to a future SDCC backend developer
+        who is either very brave or has made similarly questionable life choices.
+    </p>
+
+    <h2>Porting SDCC</h2>
+
+    <i>Brace yourselves, boring port filled with technicalities ahead!</i>
+
+    <p>
+        SDCC is a very small project compared to LLVM. The porting process consists of creating a subfolder for your backend, 
+        and creating a bunch of files, each doing something very specific. You have your own backend's <code>main.c</code>,
+        <code>ralloc.c</code>, <code>gen.c</code> and so on. The fact I could design register allocation was great: my machine
+        is very unusual in that it has no traditional registers. The 0-page in memory is used as a register file and that means
+        I have absolutely no alignment issues: I can pack single byte, double, triple, quadruple byte values without aligning to a fixed width.
+        I can use every single byte freely which is not the case for x86 for example: you have eax and rax, but you don't have eax_hi and eax_lo.
+    </p>
+
+    <p>
+        The porting process was kind of straightforward, and I gradually implemented many features as well as testing them.
+        But of course, tests are written by the programmer, so you never know what bugs may be lurking in the code. Especially when the programmer is me.<br>
+        This being said, here is how my current port diverges from ISO C:
+        <ul>
+            <li>Structures are limited to a maximum of 11 bytes if returned directly from a function.</li>
+            <li>Floats are currently unsupported.</li>
+            <li>Long long is currently unsupported.</li>
+            <li>Functions are by default non-reentrant; much like on the Intel 8051, stack size is very limited (256 bytes). Recursion is only possible on explicitly marked functions.</li>
+            <li>Function pointers are currently unsupported.</li>
+        </ul>
+    </p>
+    
+    <h2>The outcome</h2>
+    <p>
+        I compiled the following simple C program:
+        <br>
+        <code>
+            int add(int a, int b) {
+                return a + b;
+            }
+        </code>
+        <br>
+
+        The generated assembly code is:
+        <br>
+        <code>
+            	.module file
+            _add_PARM_1:
+                .ds 2
+            _add_PARM_2:
+                .ds 2
+            _L2:
+            add:
+                mov	11, _add_PARM_2+1
+                mov	10, _add_PARM_1+1
+                tst	0, 0, #0
+                add	f1, 10, 11
+                mov	11, _add_PARM_2
+                mov	10, _add_PARM_1
+                add	f0, 10, 11
+                tst	0, 0, #0
+                add	ret_hi, f0, zero
+                tst	0, 0, #0
+                add	ret_lo, f1, zero
+                ret
+            _L1:
+        </code>
+        <br>
+        Let's go over why the generated code could definitely be better. "Could be better" is doing some heroic understatement here.
+    </p>
+
+    <h2>Explaining the code</h2>
+    <p>
+        Let's briefly explain what's going on. Tec30 starts by fetching the arguments from RAM, and moving them to "11" and "10", as you can see.
+        Those are addresses in the 0-page. Essentially, it's the equivalent of performing an <code>ld</code> instruction on more
+        conventional load-store architectures.
+    </p>
+
+    <p>
+        Now that the arguments are in the 0-page, the compiler clears carry with a <code>tst 0, 0, #0</code> instruction. This is because the Tec30 has no carry flag, and the <code>add</code> instruction will set the carry bit in the destination register if an overflow occurs. The compiler then performs the addition of the two arguments, storing the result in "f1" and "f0", which are also addresses in the 0-page.
+        This is inefficiency number 1: the compiler could have easily stored the results in the <code>ret_hi</code> and <code>ret_lo</code> registers.
+        The compiler then clears carry one more time, adds the remaining bytes, and moves the result to the return registers.
+        <br>
+        What seems like a simple inefficiency causes the code to get a lot fatter than necessary, and there's another
+        subtlety here: the broken sums.
+    </p>
+
+    <p>
+        If Tec30 uses adds to move values around, the compiler clears carry first EVERY SINGLE TIME.
+        That's twice as wasteful as simply having "one more add".
+        <br>
+        Not to mention that Tec30 takes 3 cycles to perform any ALU operation. That means a single generated <code>mov</code> between
+        0-page addresses takes 6 cycles. Absolutely insane, but at least the inefficiency is consistent.
+    </p>
+
+    <p>This is how the code should have rather been:
+        <code>
+            mov 11, _add_PARM_2+1
+            mov 10, _add_PARM_1+1
+            tst 0, 0, #0
+            add ret_lo, 10, 11     ; carry chain continues below
+            mov 11, _add_PARM_2
+            mov 10, _add_PARM_1
+            add ret_hi, 10, 11
+            ret
+        </code>
+
+        <br>
+        As you can see, it's a fraction of the original one and runs much faster.
+        Sadly, my port is still at a stage where manually writing assembly is more practical.
+        
+        But fear not: eventually this will not just emit flawless assembly, it will also support the entirety of C. Right now there are only a few shenanigans going on, as mentioned above.
+    </p>
+
+    <h2>What's next</h2>
+    <ul>
+        <li>Optimize the assembly code generation</li>
+        <li>Emulate floats in software</li>
+        <li>Add more test cases (and hopefully have them actually test something)</li>
+    </ul>
+</body>
+</html>

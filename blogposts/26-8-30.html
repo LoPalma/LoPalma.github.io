@@ -29,14 +29,14 @@
         I was very satisfied, but then I compared it with the existing competition:
         <ul>
             <li><b>SERV</b>: absolute monster: in just 100-ish LUTs you get full RV32I support, at the cost of having tremendous IPC.</li>
-            <li><b>PicoBlaze</b>: created by actually manually instantiating individual LUTs for xilinx 7-series FPGAs. Smaller than SERV,
+            <li><b>PicoBlaze</b>: created by actually manually instantiating individual LUTs for Xilinx 7-series FPGAs. Smaller than SERV,
             but it's 8bit only and requires you to write very cursed proprietary assembly.</li>    
         </ul>
         My core was, predictably, both larger and not perceptibly faster - a truly inspired combination. It only had four registers, meaning the generated code from an eventually ported C compiler
         would have been very inefficient; also, although the core itself was a dual issue VLIW parallel core, the most useful instructions
         (load/store with auto increment/decrement) simply couldn't be paired together. It was also extremely constrained in terms of the instructions
         themselves: I had managed to fit two parallel instructions in a single 8bit bundle. The CPU could only add, subtract, load, store and jump if less or equal.
-        In general, the performance advantage of a 16bit parallel core was totally rendered useless by the poor quality of C code and the lack of competitivity in size, as it was double SERV.
+        In general, the performance advantage of a 16-bit parallel core was totally rendered useless by the poor quality of C code and the lack of competitiveness in size, as it was double SERV.
     </p>
 
     <h2>TEC30: my first massive win</h2>
@@ -49,7 +49,7 @@
         It turned out to be very small in LUT size.
         TEC30 is a zero register, memory-memory machine. It means that every instruction takes some data at some addresses and puts it back
         somewhere in memory, without storing it in registers. The ALU and datapath are 8bit wide (hence the 3 in 30: 2^3=8, whereas the 0 means Zero-registers)
-        but since you can just perform ADC instructions on contiguous bytes in memory, you can perform abritrary size maths, as long as it's just integer calculations.
+        but since you can just perform ADC instructions on contiguous bytes in memory, you can perform arbitrary-size maths, as long as it's just integer calculations.
         Memory is addressed in 16bits, but to avoid every instruction needing to store 6bytes of operand addresses (dest, src1 and src2) I decided
         to make arithmetic implicitly target the 0-page, aka the first 256bytes in memory. This way I could halve the size of operands.
         Every instruction is 4bytes long, composed of an opcode byte, a dest byte, and then two "wildcard" bytes. They can be:
@@ -64,7 +64,7 @@
         TEC30 is now EXTREMELY C-friendly: ample scratchpad memory (0-page), arbitrary size arithmetic (I can manage all C types).
         And on top of all that, the TEC30 core fits in exactly 98LUTs.
         <br>
-        Exactly: that's PicoBlaze territory in terms of size, except you don't need to sell your sanity to write code for it, though you loose
+        Exactly: that's PicoBlaze territory in terms of size, except you don't need to sell your sanity to write code for it, though you lose
         some performance because BRAM reads are synchronous on FPGA fabric. But in turn, if I implement C for this, you get to actually write in C.
         Totally insane to think about, for me.
     </p>
@@ -91,7 +91,7 @@
 
     <ul>
         <li>Get to a point where TEC30 is actually publishable</li>
-        <li>Try to make the first few softwares targeting TEC30, and then bite off way more than I can chew porting LLVM because why not.</li>
+        <li>Try to make the first few software projects targeting TEC30, and then bite off way more than I can chew porting LLVM because why not.</li>
     </ul>
 </body>
 </html>
