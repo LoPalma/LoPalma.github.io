@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finally successful</title>
+</head>
+<body>
+    <p align="right">
+        <a href="../index.html">lopalma.github.io</a>
+    </p>
+
+    <h1>It finally happened</h1>
+    <p>
+        After struggles Satan himself would deem too cruel to become one of his hellish punishments,
+        after countless hours of debugging at unholy times of day, I managed to:
+        <ul>
+            <li>Get SDCC to generate decent C code (there's still margin as you'll read)</li>
+            <li>Finish implementing the ISO C standard (with caveats)</li>
+            <li>Write, compile, and flash a working monitor program for Tec30.</li>
+        </ul>
+    </p>
+
+    <h1>Compiler work</h1>
+
+    <p>
+        Last time we got a taste of how bad the generated code was.<br>
+        I have now managed to make it somewhat decent at optimizing movs away. But I'll let the actual code do the talking:
+        <br>
+        <pre><code class="language-asm">
+	.module file
+_add_PARM_1:
+	.ds 2
+_add_PARM_2:
+	.ds 2
+_L2:
+add:
+	mov	11, _add_PARM_2+1
+	mov	10, _add_PARM_1+1
+	tst	0, 0, #0
+	add	6, 10, 11
+	mov	11, _add_PARM_2
+	mov	10, _add_PARM_1
+	add	5, 10, 11
+	ret
+_L1:
+        </code></pre>
+        <br>
+        That is extremely clean compared to the originally generated file you can check in <a href="26-9-9.html">the previous post</a> and 
+        it really makes me feel satisfied. This is just a simple function though, and sometimes the compiler forgets to automatically
+        place the last operation of the function straight into the return registers. Also, there's an insane amount of unnecessary movs to address, 
+        especially in bigger programs. PalMon, my monitor program, is just about 200 lines of C. Can you guess the size of the generated executable?
+        Raw? One could guess 1kb, perhaps even 2kb. But no, it's an insane 4.6kb of raw code. That is about 1150 instructions.
+    </p>
+
+
+    <p>
+        At first I really had no idea why the code was so big. I then found out it was for two reasons:
+        <ul>
+            <li>Calling conventions made it so that 44.5% of all instructions are movs. Yeah, I know. And the worst part?
+                Sadly, they're actually pretty reasonable! The zero page is pretty big but every function argument 
+                is fetched from memory and has to be placed in specific spots after they're done being fiddled with.</li>
+            <li>Tec30 achieves its size thanks to its byte serial nature: but it's not serial at instruction level, it's serial at software level: by chaining
+                identical instructions, the user can effectively manipulate data bigger than a single byte. But this means that every integer takes two instructions to add,
+                preload, move, and so on; and this is with the default size of 2 bytes! If the user were to pick 4-byte-wide integers,
+                code density would drop even more.
+            </li>
+        </ul>
+        Given this evidence, I couldn't really do much about it: Tec30's main pitch is low LUT usage, not compact code!
+        Actually, it's quite the opposite in that regard: accumulator-less accumulator machines like mine are notoriously
+        inadequate to compress instruction size. This might push me to develop a P variant for tec30, featuring instruction com<b>P</b>ression.
+    </p>
+
+    <h1>Software work: PalMon</h1>
+
+    <p>
+        To finally debug this CPU without needing to reload a different bitstream every time, and to test the
+        SDCC port, I decided to write this tiny monitor program of just about 200 lines of C.
+        Compiled executable is HUGE, but it works. I can surely optimize it by writing it in assembly by hand, but
+        ending up writing assembly after developing an SDCC port wouldn't exactly be that smart of a move.
+        This being said, PalMon has absolutely garbage invalid-input handling, is probably prone to all kinds of overflows,
+        memory corruption, leaks... but it works, and that's what matters.
+    </p>
+    
+    <p>
+        Thanks to PalMon my debug flow was totally redrawn.
+        Before, I had to try and reproduce the bug, change inputs, and if the bug was somewhat trivial this was enough.<br>
+        If it wasn't enough, I had to wrestle my way into Vivado's IP catalog, pick the ILA (Integrated Logic Analyzer), wait 15 minutes
+        for vivado to finish writing the bitstream, flash it, export the VCD (the file containing all of the waveforms of the CPU signals), and
+        the worst has yet to come: analyzing the VCD.<br>
+        In the past I mentioned feeding VCDs to DeepSeek, but that was too simplistic: if I fed a 10.000 lines long VCD to it, I would
+        saturate its context super fast. Instead, I would skim over the VCD and spot unusal patterns and flag them to DeepSeek,
+        who would then after another good 15 minutes tell me what was (or wasn't) going on, with a good extra 10 minutes of
+        me double checking DeepSeek hand't hallucinated anything.<br>
+        The latter process is still very relevant, and overall is the more nuclear option, but thanks to PalMon the
+        amount of debugging I could do WITHOUT touching an ILA was greatly increased. Before, my fiddling still involved modifying 
+        the initial code which, requires a new synthesis, implementation, write bitstream process.
+        Now I can write programs in RAM by hand in hex without ever typing '<code>make vivado</code>'.
+        I'm not gonna bore you with the details anymore though.
+    </p>
+    
+    <p>
+
+        Thanks to my unfathomable web development skills, after some research I found out you can embed videos in HTML,
+        so enjoy this demo of PalMon: the not-quite-official Tec30 monitor program.
+    </p>
+
+    <h2>Demos!</h2>
+
+    <h3>PalMon P command</h3>
+    <p>
+        The P command allows you to print the value stored at a specific address, as shown in the clip.<br>
+        Specifically, address <code>0x0200</code> is the start of the PalMon program itself.
+    </p>
+
+    <video autoplay loop muted playsinline>
+        <source src="videos/26-9-12/PalMon_P_demo.mp4" type="video/mp4">
+    </video>
+
+
+    <h3>PalMon B command</h3>
+    <p>
+        The B command allows you to print the values stored in a contiguous block of memory, as shown in the clip.
+        Specifically, we're dumping the zero page, so you can inspect the internal state of Tec30 while running PalMon.
+    </p>
+
+    <video autoplay loop muted playsinline>
+        <source src="videos/26-9-12/PalMon_B_demo.mp4" type="video/mp4">
+    </video>
+
+    <h3>PalMon W command</h3>
+    <p>
+        The W command allows you to write a value to a specific address and its contiguous cells, as shown in the clip.
+    </p>
+    
+    <video autoplay loop muted playsinline>
+        <source src="videos/26-9-12/PalMon_W_demo.mp4" type="video/mp4">
+    </video>
+
+
+    <h3>PalMon G command</h3>
+    <p>
+        The G command allows you to run the program starting from a specific address, as shown in the clip.<br>
+        Since there are no other programs loaded in memory, I used the G command to run PalMon itself,
+        which is located at <code>0x0200</code>.
+    </p>
+
+    <video autoplay loop muted playsinline>
+        <source src="videos/26-9-12/PalMon_G_demo.mp4" type="video/mp4">
+    </video>
+
+
+    <h3>PalMon F command</h3>
+    <p>
+        Last but not least, the F command shows the top of memory (intended as F in "free," but it quickly changed purpose).
+    </p>
+
+    <video autoplay loop muted playsinline>
+        <source src="videos/26-9-12/PalMon_F_demo.mp4" type="video/mp4">
+    </video>
+
+    <p>
+        Needless to say, I spent an indecent amount of time playing around in PalMon, doing absolutely nothing except
+        wonder about my creation. It was so refreshing to see a high-dopamine functioning REPL after weeks of
+        "I wonder if it actually works" and "Let's pray I don't need to drop in another ILA".
+    </p>
+
+    <h3>Now what? Am I done?</h3>
+
+    <p>
+        I wish...<br>
+        A lot has to be done still: better compiler optimizations, better C standard support, an actual RTOS, and even more.
+        Among the things I wanna do: properly develop more Tec30 variants and bus wrappers (such as Wishbone and AXI4-Lite),
+        the aforementioned P variant, and perhaps even merge my port upstream to SDCC, once I publish the RTL.<br>
+        Speaking of publishing, it's about time I do that. Project is advanced enough, with some small caveats:
+        <ul>
+            <li>
+                My commit history is absolutely embarrassing, I'm not very experienced with it and sometimes I commit too little, sometimes too much.
+                I'm definitely rebasing the entire thing into a single clean commit.
+            </li>
+            <li>
+                I have an AGENTS.md in my project folder, and that's enough to gain free hate, even though this very blog testifies that this is NOT vibe coded.
+                AI is a great tool, and as long as you use the hammer and the hammer doesn't use you, I see no bad in that. Without AI, this would have taken EVEN longer, and would have
+                been EVEN MORE excruciating to deal with. I will keep the AGENTS.md in the project folder as I'm not ashamed of it, but I really
+                ask you, dear readers, to avoid fanaticism: the AI slop witch hunt is one of the main reasons I have yet to publish this.
+            </li>
+            <li>
+                I have yet to figure out the "perfect shipping formula": if, before you can test Tec30 on your board, you have to clone, compile, synthesize, implement, flash the bitstream,
+                and so on, nobody would try it! But I'm working on a way to distribute the RTL with as little friction as possible.
+            </li>
+        </ul>
+    </p>
+
+    <p>
+        For now, this is all! I hope some of you will be interested in my work and will want to contribute to Tec30:
+        I would love to try and optimize it for iCE40 boards and Altera FPGAs, but I don't own them.
+    </p>
+</body>
+</html>
