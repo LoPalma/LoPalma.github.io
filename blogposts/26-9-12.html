@@ -89,9 +89,9 @@ _L1:
         for vivado to finish writing the bitstream, flash it, export the VCD (the file containing all of the waveforms of the CPU signals), and
         the worst has yet to come: analyzing the VCD.<br>
         In the past I mentioned feeding VCDs to DeepSeek, but that was too simplistic: if I fed a 10.000 lines long VCD to it, I would
-        saturate its context super fast. Instead, I would skim over the VCD and spot unusal patterns and flag them to DeepSeek,
+        saturate its context super fast. Instead, I would skim over the VCD and spot unusual patterns and flag them to DeepSeek,
         who would then after another good 15 minutes tell me what was (or wasn't) going on, with a good extra 10 minutes of
-        me double checking DeepSeek hand't hallucinated anything.<br>
+        me double checking DeepSeek hadn't hallucinated anything.<br>
         The latter process is still very relevant, and overall is the more nuclear option, but thanks to PalMon the
         amount of debugging I could do WITHOUT touching an ILA was greatly increased. Before, my fiddling still involved modifying 
         the initial code which, requires a new synthesis, implementation, write bitstream process.

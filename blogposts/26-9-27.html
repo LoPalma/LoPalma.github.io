@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>More optimizations</title>
+</head>
+<body>
+    <p align="right">
+        <a href="../index.html">lopalma.github.io</a>
+    </p>
+    <h1>Code size explosion</h1>
+    <p>
+        No matter how hard I tried, I hit a wall on size optimizations. And it's a really dramatic situation.
+        For instance, a simple integer BASIC interpreter I wrote took 61kb of space at one point! That's almost the entirety
+        of generic data memory available! So I decided that at the cost of a bit of speed, it was more than justified to
+        reduce code size. I applied extreme outlining policies, creating a small C library called <code>libtec30</code> whose
+        only purpose is replacing costly duplicate instructions with a function call to a function in that library. All of this
+        is statically baked into the final executable. Savings were real: BASIC got in the 50kb range, PalMon (of which you can
+        find clips in the <a href="26-9-12.html">previous post</a>) dropped by ~800 bytes in size.
+    </p>
+
+    <p>
+        It's not that you CAN'T make C fit in a smaller footprint: you CAN, and I did. Before touching any compiler internals, 
+        I manually replaced every "int" inside PalMon to a "signed char" type, and that had a pretty good size reduction by itself:
+        simply shrinking types to fit. Sadly I can't really make this automatic in the compiler, as it'd need to track overflow
+        and I'd just be making Ada Spark with C syntax.
+    </p>
+
+    <h1>The good news</h1>
+    <p>
+        At least I managed to turn TEC30 in a nice "Plug and play" experience: after all, it's meant as a ready to use solution.
+        I took inspiration from-ahem shamelessly copied ahem-how professional IP cores are packaged. TEC30's RTL are now online!
+        The C compiler is still being tweaked, as hopeless as I am, but the assembler is out already. I still lack
+        proper documentation but I am writing right now. Too bad LibreOffice Writer actively tries to destroy my diagrams.
+        This being said, TEC30 is so small you can just read the verilog directly at this point. But even more probable,
+        nobody will care if I don't have proper documentation already because nobody even knows this is a thing.
+    </p>
+
+    <p>
+        Am I done now? Of course not! I have a lot to finish. Current TEC30 publication includes a UART module, and X7/G variants.
+        I must at least implement a wishbone wrapper and some form of interrupt controller. Until those are ready I can't stop working
+        on this. I also will have to confront myself with the vibe coding witch hunters I'm terrified of, which is why
+        there's a very insecure disclaimer about AI usage in my README. I should probably make it sound more confident because
+        it makes me sound more guilty than what I actually am, funnily enough.
+    </p>
+
+    <h1>What's next</h1>
+    <ul>
+        <li>I might design a proper logo for TEC30 to include in the website.</li>
+        <li>I shall complete the proper docs, at some point.</li>
+        <li>I will definitely have created at LEAST the wishbone module by next time.</li>
+    </ul>
+
+</body>
+</html>

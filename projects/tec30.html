@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEC30: tiny embeddable controller</title>
+</head>
+<body>
+    <h1>TEC30: a 160LUT tiny open source controller<h1>
+    <h2><i>Revolving around a custom ISA with its own SDCC port</i><h2>
+    
+        <h3>Features:</h3>
+        <li>
+            <ul><b>Trust maths, not me</b>: TEC30 was formally verified using Symbiyosys, meaning unless your board is broken, it WILL work.</ul>
+            <ul><b>Vendor-specific optimized</b>: TEC30 features an X7 version specifically tailored
+            for xilinx commercial 7 series boards, limiting how much of the layout goes into vivado's heuristics</ul>
+            <ul><b>Tiny footprint</b>: for just 160LUTs, 40 more than SERV, you get a C programmable core with better CPI.</ul>
+            <ul><b>Modularity</b>: TEC30 was built with a modular architecture in mind. The user can customize which peripherals
+            the final SoC should mount, by changing a simple parameter in the verilog instantiation.</ul>
+            <ul><b>Customizable memory model</b>: TEC30 can be wired to BRAM in a pure harvard configuration,
+            or modified/hybrid harvard in case you want to run an OS on it.</ul>
+            <ul><b>Open source</b>: TEC30 is distributed under CERN-OHL-S-2.0 license, and you are therefore free to redistribute it
+            according to its terms.</ul>
+            <ul><b>Simplicity</b>: TEC30 is so small you could memorize the exact LUT keys and layouts it takes once flashed on silicon.
+            Forget not knowing why something did or didn't happen: TEC30 is so small you can emulate it cycle by cycle in your head.</ul>
+            <ul><b>Performance</b>:</ul> TEC30 (bare)'s max clock frequency is well above 200MHz.
+        </li>
+
+    <h2>Downloads</h2>
+    TEC30 can be cloned from its repo, by running this command:
+    
+    <br>
+    <code>git clone https://github.com/LoPalma/tec30</code>
+    <br>
+
+    The repo includes an assembler, verification suite, tests, and synthesizable RTL files.
+    As for the C toolchain, it hasn't been published yet. For updates on its publishing you
+    can refer to my blogposts (scroll to the bottom of the <a href="lopalma.github.io/index.html">page</a>).
+
+    <h2>Quickstart</h2>
+    Once you cloned the repo, embedding TEC30 is a matter of seconds.
+    Specifically, by copying this verilog down here, you'll be embedding a fully ready tiny SoC known as TEC30X7U:
+
+    <pre>
+        <code class="language-verilog">
+            tec30_x7u #(
+                .ALU_IMPL(0) // change to 1 if you're not using a Xilinx 7 series FPGA
+                .MEM_MODEL(0) // 0 = pure harvard, 1 = modified/hybrid harvard
+            ) u_board (
+                // of course ensure you have declared the signals before plugging them here
+                .clk(clk),
+                .btn(rst_btn),
+                .rx(uart_rx),
+                .tx(uart_tx)
+            )
+        </code>
+    </pre>
+
+    If you wish to build your own SoC, you can do that using the <code>tec30_soc</code> toplevel, as follows:
+    <pre>
+        <code class="language-verilog">
+            logic rst;
+            tec30_reset u_rst (.clk(clk), .btn(rst_btn), .rst(rst));
+            tec30_soc #(
+                .ALU_IMPL(0) // change to 1 if you're not using a Xilinx 7 series FPGA
+                .MEM_MODEL(0) // 0 = pure harvard, 1 = modified/hybrid harvard
+                .CODE_WORDS(16384) // to set instruction memory
+                .DATA_WORDS(65535) // to set data memory
+                .CODE_HEX("path/to/code.hex")
+                .DATA_LO_HEX("path/to/data_lo.hex")
+                .DATA_HI_HEX("path/to/data_hi.hex")
+                .HAS_UART(1)
+                // and so on so forth for every peripheral you (don't) want
+            )
+        </code>
+    </pre>
+    That code instantiated TEC30X7U, just in extra steps to demonstrate the composability of TEC30. <br>
+    
+    You can also work with TEC30's bare core directly, without using tec30_soc's abstractions.
+    This is by far the most verbose way to start using TEC30:
+    <pre>
+        <code>
+            tec30 #(.ALU_IMPL(0)) cpu (
+                .clk(clk),
+                .rst(rst),
+                .ibus_adr(ibus_adr), 
+                .ibus_rdy(ibus_rdy), 
+                .ibus_data(ibus_data),
+                .ibus_vld(ibus_vld), 
+                .ibus_eom(ibus_eom),
+                .dbus_adr(dbus_adr), 
+                .dbus_rdy(dbus_rdy), 
+                .dbus_we(dbus_we),
+                .dbus_wdata(dbus_wdata), 
+                .dbus_data(dbus_data),
+                .dbus_vld(dbus_vld), 
+                .dbus_eom(dbus_eom),
+                .dbg_MP(), .dbg_PC(), .dbg_C_flag(), .dbg_Z_flag(),
+                .dbg_opA(), .dbg_opB(), .dbg_state(), .dbg_instr()
+            );
+
+        </code>
+    </pre>
+    With that, you interface directly with the Q-bus master and gain access to debug signals.
+    Happy hacking!
+
+    <h2>Development</h2>
+    TEC30 is developed on github by me.
+    You can read about my shenanigans and various "adventures" in which I learn just how nice it would be to have a teacher
+    <a href="lopalma.github.io/index.html">at the bottom of this page</a>. Just click on one of those links and enjoy. 
+
+</body>
+</html>
