@@ -10,21 +10,21 @@
     <h2><i>Revolving around a custom ISA with its own SDCC port</i><h2>
     
         <h3>Features:</h3>
-        <li>
-            <ul><b>Trust maths, not me</b>: TEC30 was formally verified using Symbiyosys, meaning unless your board is broken, it WILL work.</ul>
-            <ul><b>Vendor-specific optimized</b>: TEC30 features an X7 version specifically tailored
-            for xilinx commercial 7 series boards, limiting how much of the layout goes into vivado's heuristics</ul>
-            <ul><b>Tiny footprint</b>: for just 160LUTs, 40 more than SERV, you get a C programmable core with better CPI.</ul>
-            <ul><b>Modularity</b>: TEC30 was built with a modular architecture in mind. The user can customize which peripherals
-            the final SoC should mount, by changing a simple parameter in the verilog instantiation.</ul>
-            <ul><b>Customizable memory model</b>: TEC30 can be wired to BRAM in a pure harvard configuration,
-            or modified/hybrid harvard in case you want to run an OS on it.</ul>
-            <ul><b>Open source</b>: TEC30 is distributed under CERN-OHL-S-2.0 license, and you are therefore free to redistribute it
-            according to its terms.</ul>
-            <ul><b>Simplicity</b>: TEC30 is so small you could memorize the exact LUT keys and layouts it takes once flashed on silicon.
-            Forget not knowing why something did or didn't happen: TEC30 is so small you can emulate it cycle by cycle in your head.</ul>
-            <ul><b>Performance</b>:</ul> TEC30 (bare)'s max clock frequency is well above 200MHz.
-        </li>
+        <ul>
+            <li><b>Formal verification</b>: TEC30 was formally verified using SymbiYosys, providing strong assurance of correct operation when implemented on a functioning board.</li>
+            <li><b>Vendor-specific optimization</b>: TEC30 includes an X7 version specifically tailored
+            for Xilinx commercial 7-series boards, reducing the amount of the layout left to Vivado's heuristics.</li>
+            <li><b>Small footprint</b>: At just 160 LUTs, only 40 more than SERV, TEC30 provides a C-programmable core with improved CPI.</li>
+            <li><b>Modularity</b>: TEC30 was designed with a modular architecture. Users can customize which peripherals
+            the final SoC includes by changing a parameter in the Verilog instantiation.</li>
+            <li><b>Customizable memory model</b>: TEC30 can be connected to BRAM in a pure Harvard configuration,
+            or adapted to a modified or hybrid Harvard configuration for operating-system support.</li>
+            <li><b>Open source</b>: TEC30 is distributed under the CERN-OHL-S-2.0 license and may be redistributed
+            according to its terms.</li>
+            <li><b>Simplicity</b>: TEC30's compact design makes its implementation easy to inspect and reason about,
+            including at the cycle-by-cycle level.</li>
+            <li><b>Performance</b>: The maximum clock frequency of the bare TEC30 core is well above 200 MHz.</li>
+        </ul>
 
     <h2>Downloads</h2>
     TEC30 can be cloned from its repo, by running this command:
