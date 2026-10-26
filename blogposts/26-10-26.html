@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Long time no see</title>
+</head>
+<body>
+    <p align="right">
+        <a href="../index.html">lopalma.github.io</a>
+    </p>
+
+    <h1>October recap</h1>
+    It has been a month since my last update. <br>
+    I'd like to say I have been working very hard but I've basically just slacked off for
+    four weeks, and this is the result of that pause from programming.
+    Said pause was also starkly forced by schoolwork, which took some of my time and energy.
+
+    <h2>TEC30</h2>
+    Tec30 development stopped. I was very hesitant to share the SDCC backend, and I was also working on the Wishbone module
+    but just sort of lost motivation. At least I have reached somewhat of a minimum viable product with the processor so I don't
+    feel guilty for this sort of pause. I had to finish writing the docs but I have absolutely got no motivation to do so,
+    I might ask deepseek for help although I care about documentation being human written. We'll see.
+
+    <h2>Bad Apple!! on the C preprocessor</h2>
+    There's a rule, or saying, I don't quite know: "if it can display two colors, it can run bad apple".
+    Turns out CPP can do that. First, I created a python script to turn the original video in a 
+    specially devised format consisting of about 300000 lines of <code>#ifdef</code> directives. 
+    Then I creates a much smaller header file to decode said format, essentially creating a super tiny VM whose "ISA" consists of
+    "<code>W(n)</code>" and "<code>B(n)</code>" directives, where W and B are for white and black respectively, 
+    and n is the number of pixels to draw. This was fun but the pure, CPP decoded video runs at like 2-3fps.
+    To make it actually run at 30fps I created an "impure" version which is implemented as an actual C program instead of leveraging
+    the poor C preprocessor, and this version runs beautifully at 30fps. You can try both out by cloning the source, 
+    which is on my github.
+
+    No preprocessor was harmed in the making of this project.
+</body>
+</html>
