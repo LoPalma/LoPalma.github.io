@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TEC30: tiny embeddable controller</title>
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+    <link rel="stylesheet" href="https://cloudflare.com">
 </head>
 <body>
+
     <h1>TEC30: a 160LUT tiny open source controller<h1>
     <h2><i>Revolving around a custom ISA with its own SDCC port</i><h2>
     
@@ -43,35 +46,35 @@
 
     <pre>
         <code class="language-verilog">
-            tec30_x7u #(
-                .ALU_IMPL(0) // change to 1 if you're not using a Xilinx 7 series FPGA
-                .MEM_MODEL(0) // 0 = pure harvard, 1 = modified/hybrid harvard
-            ) u_board (
-                // of course ensure you have declared the signals before plugging them here
-                .clk(clk),
-                .btn(rst_btn),
-                .rx(uart_rx),
-                .tx(uart_tx)
-            )
+tec30_x7u #(
+    .ALU_IMPL(0) // change to 1 if you're not using a Xilinx 7 series FPGA
+    .MEM_MODEL(0) // 0 = pure harvard, 1 = modified/hybrid harvard
+) u_board (
+    // of course ensure you have declared the signals before plugging them here
+    .clk(clk),
+    .btn(rst_btn),
+    .rx(uart_rx),
+    .tx(uart_tx)
+)
         </code>
     </pre>
 
     If you wish to build your own SoC, you can do that using the <code>tec30_soc</code> toplevel, as follows:
     <pre>
         <code class="language-verilog">
-            logic rst;
-            tec30_reset u_rst (.clk(clk), .btn(rst_btn), .rst(rst));
-            tec30_soc #(
-                .ALU_IMPL(0) // change to 1 if you're not using a Xilinx 7 series FPGA
-                .MEM_MODEL(0) // 0 = pure harvard, 1 = modified/hybrid harvard
-                .CODE_WORDS(16384) // to set instruction memory
-                .DATA_WORDS(65535) // to set data memory
-                .CODE_HEX("path/to/code.hex")
-                .DATA_LO_HEX("path/to/data_lo.hex")
-                .DATA_HI_HEX("path/to/data_hi.hex")
-                .HAS_UART(1)
-                // and so on so forth for every peripheral you (don't) want
-            )
+logic rst;
+tec30_reset u_rst (.clk(clk), .btn(rst_btn), .rst(rst));
+tec30_soc #(
+    .ALU_IMPL(0) // change to 1 if you're not using a Xilinx 7 series FPGA
+    .MEM_MODEL(0) // 0 = pure harvard, 1 = modified/hybrid harvard
+    .CODE_WORDS(16384) // to set instruction memory
+    .DATA_WORDS(65535) // to set data memory
+    .CODE_HEX("path/to/code.hex")
+    .DATA_LO_HEX("path/to/data_lo.hex")
+    .DATA_HI_HEX("path/to/data_hi.hex")
+    .HAS_UART(1)
+    // and so on so forth for every peripheral you (don't) want
+)
         </code>
     </pre>
     That code instantiated TEC30X7U, just in extra steps to demonstrate the composability of TEC30. <br>
@@ -80,24 +83,24 @@
     This is by far the most verbose way to start using TEC30:
     <pre>
         <code>
-            tec30 #(.ALU_IMPL(0)) cpu (
-                .clk(clk),
-                .rst(rst),
-                .ibus_adr(ibus_adr), 
-                .ibus_rdy(ibus_rdy), 
-                .ibus_data(ibus_data),
-                .ibus_vld(ibus_vld), 
-                .ibus_eom(ibus_eom),
-                .dbus_adr(dbus_adr), 
-                .dbus_rdy(dbus_rdy), 
-                .dbus_we(dbus_we),
-                .dbus_wdata(dbus_wdata), 
-                .dbus_data(dbus_data),
-                .dbus_vld(dbus_vld), 
-                .dbus_eom(dbus_eom),
-                .dbg_MP(), .dbg_PC(), .dbg_C_flag(), .dbg_Z_flag(),
-                .dbg_opA(), .dbg_opB(), .dbg_state(), .dbg_instr()
-            );
+tec30 #(.ALU_IMPL(0)) cpu (
+    .clk(clk),
+    .rst(rst),
+    .ibus_adr(ibus_adr), 
+    .ibus_rdy(ibus_rdy), 
+    .ibus_data(ibus_data),
+    .ibus_vld(ibus_vld), 
+    .ibus_eom(ibus_eom),
+    .dbus_adr(dbus_adr), 
+    .dbus_rdy(dbus_rdy), 
+    .dbus_we(dbus_we),
+    .dbus_wdata(dbus_wdata), 
+    .dbus_data(dbus_data),
+    .dbus_vld(dbus_vld), 
+    .dbus_eom(dbus_eom),
+    .dbg_MP(), .dbg_PC(), .dbg_C_flag(), .dbg_Z_flag(),
+    .dbg_opA(), .dbg_opB(), .dbg_state(), .dbg_instr()
+);
 
         </code>
     </pre>
@@ -109,5 +112,7 @@
     You can read about my shenanigans and various "adventures" in which I learn just how nice it would be to have a teacher
     <a href="lopalma.github.io/index.html">at the bottom of this page</a>. Just click on one of those links and enjoy. 
 
+    <script src="https://cloudflare.com"></script>
+    <script>hljs.highlightAll();</script>
 </body>
 </html>
